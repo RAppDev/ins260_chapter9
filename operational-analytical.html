@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operational or Analytical?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lexend:wght@400;500;700&family=Noto+Sans+Arabic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Bright loyalty-app world (matches the VIP game): lilac wall, indigo ink, hot pink vs electric blue boxes */
+  --kraft:#ece7ff;
+  --paper:#fdfcff;
+  --ink:#1f1840;
+  --stamp:#ff4f8b;
+  --tape:#ffc93c;
+  --calm:#2f6bff;
+  --muted:#5b5680;
+  --good:#12a879;
+  --bad:#e5484d;
+  --display:"Bungee","Arial Black",Impact,sans-serif;
+  --body:"Lexend","Segoe UI",system-ui,sans-serif;
+  --arabic:"Noto Sans Arabic","Geeza Pro","Segoe UI",sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--kraft);
+  background-image:radial-gradient(circle at 12px 12px, rgba(255,79,139,.14) 3px, transparent 4px),radial-gradient(circle at 36px 36px, rgba(47,107,255,.12) 3px, transparent 4px);background-size:48px 48px;
+  color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;
+}
+.wrap{max-width:1000px;margin:0 auto;padding:28px 18px 60px;display:grid;gap:22px}
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.1;margin:0;text-wrap:balance}
+p{margin:0}
+.ar{font-family:var(--arabic);direction:rtl;unicode-bidi:isolate}
+.eyebrow{font-family:var(--display);font-size:13px;letter-spacing:.06em;color:var(--stamp)}
+header{display:grid;gap:10px}
+header h1{font-size:clamp(38px,7vw,64px)}
+header h1 span{background:var(--tape);padding:0 .12em;display:inline-block;transform:rotate(-1.5deg)}
+.lede{max-width:62ch;font-size:18px}
+.howto{font-size:15px;color:var(--muted)}
+
+/* bins */
+.bins{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.bin{
+  background:var(--paper);border:3px solid var(--ink);border-radius:8px;box-shadow:6px 6px 0 var(--ink);
+  display:grid;grid-template-rows:auto 1fr;min-height:220px;transition:transform .15s, box-shadow .15s;
+}
+.bin.over{transform:translate(-2px,-2px);box-shadow:9px 9px 0 var(--ink)}
+.bin-head{padding:12px 14px;color:#fff;border-bottom:3px solid var(--ink);border-radius:5px 5px 0 0;display:grid;gap:2px}
+.bin-head h2{font-size:26px}
+.bin-head .ar{font-size:18px;font-weight:700;opacity:.95}
+.bin-head .tip{font-size:14px;font-weight:500;opacity:.95}
+.bin-body{padding:12px;display:grid;gap:10px;align-content:start}
+.empty{font-size:14px;color:var(--muted);border:2px dashed var(--line, rgba(31,24,64,.25));border-radius:6px;padding:14px;text-align:center}
+
+/* tray */
+.tray{display:grid;gap:12px}
+.tray-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px}
+.tray-head h2{font-size:20px}
+.count{font-family:var(--display);font-size:15px;background:var(--ink);color:var(--paper);padding:2px 10px;border-radius:4px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;min-height:40px}
+.card{
+  background:#fff;border:3px solid var(--ink);border-radius:8px;padding:12px;display:grid;gap:10px;
+  box-shadow:4px 4px 0 var(--ink);cursor:grab;animation:pop .35s cubic-bezier(.2,.9,.3,1.3) both;position:relative;
+}
+.card:active{cursor:grabbing}
+.card.dragging{opacity:.5}
+@keyframes pop{from{transform:scale(.92) rotate(-1deg);opacity:0}to{transform:none;opacity:1}}
+.card .top{display:flex;gap:12px;align-items:center}
+.card svg.ic{width:58px;height:58px;flex:none}
+.card .txt{font-weight:500;font-size:16px}
+.choices{display:flex;gap:8px;flex-wrap:wrap}
+.choices button{flex:1 1 0;min-width:96px}
+button{
+  font-family:var(--display);font-size:14px;cursor:pointer;color:#fff;background:var(--ink);
+  border:3px solid var(--ink);border-radius:6px;padding:8px 12px;box-shadow:3px 3px 0 var(--ink);
+  transition:transform .1s,box-shadow .1s,background .15s;
+}
+button:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+button.pick{background:#fff;color:var(--ink)}
+button.pick.on{color:#fff}
+button:disabled{cursor:default;opacity:.45;transform:none;box-shadow:3px 3px 0 var(--ink)}
+button.pick.on:disabled{opacity:1}
+:focus-visible{outline:4px solid var(--tape);outline-offset:3px}
+
+/* placed cards (compact) */
+.bin .card{padding:10px;box-shadow:3px 3px 0 var(--ink)}
+.bin .card svg.ic{width:44px;height:44px}
+.bin .card .txt{font-size:15px}
+.bin .choices button{font-size:12px;padding:6px 8px;min-width:80px}
+
+/* results on cards */
+.card.right{border-color:var(--good);box-shadow:3px 3px 0 var(--good)}
+.card.wrong{border-color:var(--bad);box-shadow:3px 3px 0 var(--bad);background:#ffe8f0}
+.badge{position:absolute;top:-12px;right:-10px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:var(--display);font-size:18px;border:3px solid var(--ink)}
+.right .badge{background:var(--good)}
+.wrong .badge{background:var(--bad)}
+.why{font-size:14px;border-top:2px dashed rgba(31,24,64,.25);padding-top:8px}
+.why b{font-family:var(--display);font-weight:400}
+
+/* action bar */
+.actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.actions .go{font-size:18px;padding:12px 20px;background:var(--stamp);box-shadow:5px 5px 0 var(--ink)}
+.actions .again{background:var(--calm)}
+.msg{font-weight:700}
+
+/* results panel */
+.panel{background:var(--paper);border:3px solid var(--ink);border-radius:8px;box-shadow:6px 6px 0 var(--ink);padding:20px;display:grid;gap:16px;animation:pop .4s both}
+.score{display:flex;flex-wrap:wrap;align-items:center;gap:16px}
+.stamp{font-family:var(--display);font-size:30px;border:5px solid currentColor;border-radius:8px;padding:4px 14px;transform:rotate(-5deg);display:inline-block;animation:thump .5s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes thump{from{transform:scale(1.8) rotate(-12deg);opacity:0}to{transform:rotate(-5deg);opacity:1}}
+.score .big{font-family:var(--display);font-size:42px;font-variant-numeric:tabular-nums}
+.rule{border-left:8px solid var(--tape);padding:6px 0 6px 14px;font-size:18px}
+.tablewrap{overflow-x:auto;border:3px solid var(--ink);border-radius:6px;background:#fff}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:15px}
+th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:2px solid rgba(31,24,64,.15)}
+th{font-family:var(--display);font-weight:400;font-size:13px;background:var(--ink);color:var(--paper);letter-spacing:.03em}
+tr:last-child td{border-bottom:0}
+td.res{font-family:var(--display);font-size:18px;text-align:center}
+td.res.ok{color:var(--good)}
+td.res.no{color:var(--bad)}
+.tag{font-family:var(--display);font-size:12px;color:#fff;padding:2px 8px;border-radius:4px;white-space:nowrap}
+td.stmt{min-width:220px}
+.st{display:flex;gap:10px;align-items:center}
+.st svg{width:34px;height:34px;flex:none}
+
+/* confetti boxes */
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:20}
+.confetti span{position:absolute;top:-40px;width:18px;height:18px;border:2px solid var(--ink);animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+
+footer{font-size:13px;color:var(--muted);text-align:center}
+
+@media (max-width:640px){
+  .bins{grid-template-columns:1fr}
+  .cards{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important}
+  .confetti{display:none}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <p class="eyebrow">INS260 · Chapter 9 · Customer relationship management</p>
+    <h1 id="title"></h1>
+    <p class="lede">CRM software comes in two types. Operational CRM serves customers in daily work: sales, customer service and marketing. Analytical CRM studies customer data to find patterns. Sort each task into the right type.</p>
+    <p class="howto">Drag a card into a box, or tap one of the two buttons on the card. You can change your mind until you check your answers.</p>
+  </header>
+
+  <section class="tray" aria-labelledby="tray-h">
+    <div class="tray-head"><h2 id="tray-h">Cards to sort</h2><span class="count" id="count"></span></div>
+    <div class="cards" id="tray" data-drop=""></div>
+  </section>
+
+  <section class="bins" id="bins" aria-label="Sorting boxes"></section>
+
+  <div class="actions">
+    <button type="button" class="go" id="check">Check my answers</button>
+    <span class="msg" id="msg" role="status"></span>
+  </div>
+
+  <section class="panel" id="panel" hidden aria-labelledby="res-h"></section>
+
+  <footer>Created by Reem Salem (using Claude.ai) for INS260 at Zayed University.</footer>
+</main>
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+
+<script>
+(function(){
+const DATA = {"title": "Operational or Analytical?", "a": {"key": "Operational", "ar": "إدارة علاقات العملاء التشغيلية", "tip": "Serving and talking to customers in daily work", "color": "#ff4f8b"}, "b": {"key": "Analytical", "ar": "إدارة علاقات العملاء التحليلية", "tip": "Studying customer data to find patterns", "color": "#2f6bff"}, "rule": "Serving or talking to customers = <b>Operational CRM</b>. Studying customer data = <b>Analytical CRM</b>. Analytical CRM uses the data that operational CRM collects.", "items": [{"id": "c0", "icon": "headset", "text": "A call centre agent sees your past orders as soon as you call", "answer": "Operational", "why": "The agent is serving a customer directly. Call centre and customer service support are operational CRM tools."}, {"id": "c1", "icon": "testdrive", "text": "A salesperson gets a reminder to call a customer after a test drive", "answer": "Operational", "why": "This is sales force automation: a customer-facing tool that helps salespeople follow up with customers."}, {"id": "c2", "icon": "chatbot", "text": "A chatbot answers a customer's question about a late delivery", "answer": "Operational", "why": "The chatbot talks to the customer in real time. Customer service tools are operational CRM."}, {"id": "c3", "icon": "email", "text": "The marketing team sends an email offer to 5,000 customers", "answer": "Operational", "why": "Running a marketing campaign is customer-facing work. Marketing automation is part of operational CRM."}, {"id": "c4", "icon": "profit", "text": "Finding out which customers bring the company the most profit", "answer": "Analytical", "why": "This means studying customer data to find patterns. Identifying profitable customers is a job of analytical CRM."}, {"id": "c5", "icon": "churn", "text": "Predicting which customers are likely to stop buying", "answer": "Analytical", "why": "Predicting churn means analysing customer data, not talking to customers. That is analytical CRM."}, {"id": "c6", "icon": "segments", "text": "Grouping customers into segments, such as students, families and office workers", "answer": "Analytical", "why": "Analytical CRM studies customer data to create segments for targeted marketing."}, {"id": "c7", "icon": "cltv", "text": "Calculating each customer's lifetime value (CLTV)", "answer": "Analytical", "why": "CLTV is one of the most important outputs of analytical CRM, like in the VIP customer game."}]};
+const ICONS = {"headset": "<path d=\"M14 34v-4a18 18 0 0 1 36 0v4\" fill=\"none\" stroke=\"#1f1840\" stroke-width=\"3.5\"/><rect x=\"8\" y=\"32\" width=\"12\" height=\"18\" rx=\"5\" fill=\"#ff4f8b\" stroke=\"#1f1840\" stroke-width=\"3\"/><rect x=\"44\" y=\"32\" width=\"12\" height=\"18\" rx=\"5\" fill=\"#ff4f8b\" stroke=\"#1f1840\" stroke-width=\"3\"/><path d=\"M50 50c0 6-6 9-14 9\" fill=\"none\" stroke=\"#1f1840\" stroke-width=\"3\"/><rect x=\"28\" y=\"55\" width=\"10\" height=\"7\" rx=\"3\" fill=\"#1f1840\"/>", "testdrive": "<path d=\"M6 42l6-12c1-3 4-5 7-5h22c3 0 6 2 7 5l6 12v8H6z\" fill=\"#2f6bff\" stroke=\"#1f1840\" stroke-width=\"3\" stroke-linejoin=\"round\"/><path d=\"M14 30h32l3 8H11z\" fill=\"#d8e4ff\" stroke=\"#1f1840\" stroke-width=\"2.5\"/><circle cx=\"16\" cy=\"50\" r=\"6\" fill=\"#1f1840\"/><circle cx=\"46\" cy=\"50\" r=\"6\" fill=\"#1f1840\"/><path d=\"M48 4c-6 0-9 4-9 9v5l-3 4h24l-3-4v-5c0-5-3-9-9-9z\" fill=\"#ffc93c\" stroke=\"#1f1840\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M45 23a3 3 0 0 0 6 0\" fill=\"none\" stroke=\"#1f1840\" stroke-width=\"2.5\"/>", "chatbot": "<path d=\"M6 10h40a4 4 0 0 1 4 4v22a4 4 0 0 1-4 4H22l-10 9v-9H6a4 4 0 0 1-4-4V14a4 4 0 0 1 4-4z\" fill=\"#d8e4ff\" stroke=\"#1f1840\" stroke-width=\"3\" stroke-linejoin=\"round\"/><rect x=\"34\" y=\"30\" width=\"26\" height=\"22\" rx=\"6\" fill=\"#12a879\" stroke=\"#1f1840\" stroke-width=\"3\"/><circle cx=\"42\" cy=\"40\" r=\"3\" fill=\"#fff\"/><circle cx=\"52\" cy=\"40\" r=\"3\" fill=\"#fff\"/><path d=\"M47 30v-6\" stroke=\"#1f1840\" stroke-width=\"3\"/><circle cx=\"47\" cy=\"22\" r=\"3\" fill=\"#ffc93c\" stroke=\"#1f1840\" stroke-width=\"2\"/><path d=\"M12 20h22M12 27h14\" stroke=\"#1f1840\" stroke-width=\"3\" stroke-linecap=\"round\"/>", "email": "<rect x=\"14\" y=\"8\" width=\"44\" height=\"30\" rx=\"3\" fill=\"#fff\" stroke=\"#1f1840\" stroke-width=\"2.5\"/><rect x=\"8\" y=\"16\" width=\"44\" height=\"30\" rx=\"3\" fill=\"#fff\" stroke=\"#1f1840\" stroke-width=\"2.5\"/><rect x=\"2\" y=\"24\" width=\"46\" height=\"32\" rx=\"3\" fill=\"#ff4f8b\" stroke=\"#1f1840\" stroke-width=\"3\"/><path d=\"M2 27l23 16 23-16\" fill=\"none\" stroke=\"#1f1840\" stroke-width=\"3\"/><text x=\"55\" y=\"60\" text-anchor=\"middle\" font-family=\"Bungee, Arial Black, sans-serif\" font-size=\"9\" fill=\"#1f1840\">5K</text>", "profit": "<path d=\"M14 6h36v8c0 12-8 20-18 20S14 26 14 14z\" fill=\"#ffc93c\" stroke=\"#1f1840\" stroke-width=\"3\"/><path d=\"M14 10H6c0 8 4 12 9 12M50 10h8c0 8-4 12-9 12\" fill=\"none\" stroke=\"#1f1840\" stroke-width=\"3\"/><path d=\"M32 34v10\" stroke=\"#1f1840\" stroke-width=\"4\"/><rect x=\"20\" y=\"44\" width=\"24\" height=\"8\" rx=\"2\" fill=\"#2f6bff\" stroke=\"#1f1840\" stroke-width=\"3\"/><rect x=\"16\" y=\"52\" width=\"32\" height=\"8\" rx=\"2\" fill=\"#1f1840\"/><text x=\"32\" y=\"24\" text-anchor=\"middle\" font-family=\"Bungee, Arial Black, sans-serif\" font-size=\"12\" fill=\"#1f1840\">$</text>", "churn": "<circle cx=\"22\" cy=\"18\" r=\"9\" fill=\"#e9b98f\" stroke=\"#1f1840\" stroke-width=\"3\"/><path d=\"M8 54V40c0-8 6-12 14-12s14 4 14 12v14z\" fill=\"#d8e4ff\" stroke=\"#1f1840\" stroke-width=\"3\"/><path d=\"M40 30h18M50 22l8 8-8 8\" fill=\"none\" stroke=\"#ff4f8b\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M44 50h14l-7-12z\" fill=\"#ffc93c\" stroke=\"#1f1840\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/><path d=\"M51 43v3\" stroke=\"#1f1840\" stroke-width=\"2.5\" stroke-linecap=\"round\"/>", "segments": "<circle cx=\"32\" cy=\"32\" r=\"26\" fill=\"#fff\" stroke=\"#1f1840\" stroke-width=\"3\"/><path d=\"M32 32V6a26 26 0 0 1 24 16z\" fill=\"#ff4f8b\" stroke=\"#1f1840\" stroke-width=\"3\" stroke-linejoin=\"round\"/><path d=\"M32 32l24-10a26 26 0 0 1-14 34z\" fill=\"#2f6bff\" stroke=\"#1f1840\" stroke-width=\"3\" stroke-linejoin=\"round\"/><path d=\"M32 32l10 24A26 26 0 0 1 6 32z\" fill=\"#12a879\" stroke=\"#1f1840\" stroke-width=\"3\" stroke-linejoin=\"round\"/>", "cltv": "<rect x=\"12\" y=\"4\" width=\"40\" height=\"56\" rx=\"5\" fill=\"#d8e4ff\" stroke=\"#1f1840\" stroke-width=\"3\"/><rect x=\"18\" y=\"10\" width=\"28\" height=\"12\" rx=\"2\" fill=\"#fff\" stroke=\"#1f1840\" stroke-width=\"2.5\"/><text x=\"44\" y=\"20\" text-anchor=\"end\" font-family=\"Bungee, Arial Black, sans-serif\" font-size=\"8\" fill=\"#1f1840\">4,680</text><g fill=\"#ffc93c\" stroke=\"#1f1840\" stroke-width=\"2\"><rect x=\"18\" y=\"28\" width=\"7\" height=\"7\"/><rect x=\"28.5\" y=\"28\" width=\"7\" height=\"7\"/><rect x=\"39\" y=\"28\" width=\"7\" height=\"7\"/><rect x=\"18\" y=\"39\" width=\"7\" height=\"7\"/><rect x=\"28.5\" y=\"39\" width=\"7\" height=\"7\"/><rect x=\"39\" y=\"39\" width=\"7\" height=\"7\" fill=\"#ff4f8b\"/><rect x=\"18\" y=\"50\" width=\"28\" height=\"5\"/></g>"};
+const A = DATA.a, B = DATA.b;
+const byKey = k => k === A.key ? A : B;
+const icon = (name, cls) => `<svg class="${cls||"ic"}" viewBox="0 0 64 64" aria-hidden="true">${ICONS[name]}</svg>`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function shuffle(arr){ const a = arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function fresh(){ return {order: shuffle(DATA.items.map(x=>x.id)), placed:{}, checked:false}; }
+
+let state = fresh();
+window.claude?.hot?.snapshot?.(() => state);
+
+const $ = s => document.querySelector(s);
+const item = id => DATA.items.find(x=>x.id===id);
+
+// Title: highlight the last word on a tape strip
+(function(){
+  const words = DATA.title.split(" ");
+  const last = words.pop();
+  $("#title").innerHTML = `${esc(words.join(" "))} <span>${esc(last)}</span>`;
+})();
+
+function cardHTML(it){
+  const chosen = state.placed[it.id];
+  let cls = "card", badge = "", why = "";
+  if(state.checked && chosen){
+    const ok = chosen === it.answer;
+    cls += ok ? " right" : " wrong";
+    badge = `<span class="badge" aria-hidden="true">${ok ? "✓" : "✗"}</span>`;
+    why = `<p class="why"><b style="color:${byKey(it.answer).color}">${esc(it.answer)}.</b> ${esc(it.why)}</p>`;
+  }
+  const btn = side => {
+    const on = chosen === side.key;
+    return `<button type="button" class="pick ${on?"on":""}" data-id="${it.id}" data-to="${side.key}" aria-pressed="${on}"
+      style="${on?`background:${side.color}`:""}" ${state.checked?"disabled":""}>${esc(side.key)}</button>`;
+  };
+  return `<article class="${cls}" draggable="${!state.checked}" data-card="${it.id}" aria-label="${esc(it.text)}${state.checked&&chosen?(chosen===it.answer?" (correct)":" (wrong)"):""}">
+    ${badge}
+    <div class="top">${icon(it.icon)}<p class="txt">${esc(it.text)}</p></div>
+    <div class="choices">${btn(A)}${btn(B)}</div>
+    ${why}
+  </article>`;
+}
+
+function render(){
+  const unplaced = state.order.filter(id => !state.placed[id]);
+  $("#tray").innerHTML = unplaced.length ? unplaced.map(id=>cardHTML(item(id))).join("")
+    : `<p class="empty">All cards are sorted. ${state.checked ? "" : "Check your answers when you're ready."}</p>`;
+  $("#count").textContent = `${unplaced.length} left`;
+
+  $("#bins").innerHTML = [A,B].map(side=>{
+    const ids = state.order.filter(id => state.placed[id] === side.key);
+    return `<div class="bin" data-drop="${side.key}">
+      <div class="bin-head" style="background:${side.color}">
+        <h2>${esc(side.key)}</h2>
+        <span class="ar" lang="ar">${esc(side.ar)}</span>
+        <span class="tip">${esc(side.tip)}</span>
+      </div>
+      <div class="bin-body">${ids.length ? ids.map(id=>cardHTML(item(id))).join("") : `<p class="empty">Drop cards here</p>`}</div>
+    </div>`;
+  }).join("");
+
+  const check = $("#check");
+  check.textContent = state.checked ? "Try again" : "Check my answers";
+  check.classList.toggle("again", state.checked);
+  if(!state.checked) $("#msg").textContent = "";
+
+  renderPanel();
+  bindDnD();
+}
+
+function renderPanel(){
+  const panel = $("#panel");
+  if(!state.checked){ panel.hidden = true; panel.innerHTML = ""; return; }
+  const total = DATA.items.length;
+  const score = DATA.items.filter(it => state.placed[it.id] === it.answer).length;
+  const perfect = score === total;
+  const verdict = perfect ? ["Perfect!", "var(--good)"] : score >= total - 2 ? ["Nearly!", "var(--tape)"] : ["Keep going", "var(--bad)"];
+  const rows = state.order.map((id,i)=>{
+    const it = item(id), mine = state.placed[id], ok = mine === it.answer;
+    return `<tr>
+      <td>${i+1}</td>
+      <td class="stmt"><div class="st">${icon(it.icon,"")}<span>${esc(it.text)}</span></div></td>
+      <td><span class="tag" style="background:${byKey(mine).color}">${esc(mine)}</span></td>
+      <td><span class="tag" style="background:${byKey(it.answer).color}">${esc(it.answer)}</span></td>
+      <td class="res ${ok?"ok":"no"}" aria-label="${ok?"correct":"wrong"}">${ok?"✓":"✗"}</td>
+      <td>${esc(it.why)}</td>
+    </tr>`;
+  }).join("");
+  panel.hidden = false;
+  panel.innerHTML = `
+    <div class="score">
+      <span class="stamp" style="color:${verdict[1]}">${verdict[0]}</span>
+      <h2 id="res-h"><span class="big">${score}/${total}</span> correct</h2>
+    </div>
+    <p class="rule">${DATA.rule}</p>
+    <div class="tablewrap">
+      <table>
+        <caption class="sr" style="position:absolute;left:-9999px">Your answers compared with the correct answers</caption>
+        <thead><tr><th>#</th><th>Statement</th><th>Your answer</th><th>Correct answer</th><th>Result</th><th>Why</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function place(id, to){
+  if(state.checked) return;
+  if(to) state.placed[id] = to; else delete state.placed[id];
+  render();
+  const el = document.querySelector(`[data-card="${id}"] button[data-to="${to||A.key}"]`);
+  el && el.focus({preventScroll:true});
+}
+
+// Buttons (event delegation)
+document.addEventListener("click", e=>{
+  const b = e.target.closest("button.pick");
+  if(b){ const id=b.dataset.id, to=b.dataset.to; place(id, state.placed[id]===to ? null : to); }
+});
+
+// Drag and drop (desktop)
+function bindDnD(){
+  document.querySelectorAll("[data-card]").forEach(c=>{
+    c.addEventListener("dragstart", e=>{ e.dataTransfer.setData("text/plain", c.dataset.card); c.classList.add("dragging"); });
+    c.addEventListener("dragend", ()=> c.classList.remove("dragging"));
+  });
+  document.querySelectorAll("[data-drop]").forEach(z=>{
+    z.addEventListener("dragover", e=>{ if(state.checked) return; e.preventDefault(); z.classList.add("over"); });
+    z.addEventListener("dragleave", ()=> z.classList.remove("over"));
+    z.addEventListener("drop", e=>{
+      e.preventDefault(); z.classList.remove("over");
+      const id = e.dataTransfer.getData("text/plain");
+      if(id && item(id)) place(id, z.dataset.drop || null);
+    });
+  });
+}
+
+function confetti(){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const box = $("#confetti"); box.innerHTML = "";
+  const colors = ["#ffc93c","#2f6bff","#ff4f8b","#12a879","#fdfcff"];
+  for(let i=0;i<40;i++){
+    const s = document.createElement("span");
+    s.style.left = Math.random()*100 + "vw";
+    s.style.background = colors[i % colors.length];
+    s.style.animationDuration = (1.6 + Math.random()*1.6) + "s";
+    s.style.animationDelay = (Math.random()*0.5) + "s";
+    box.appendChild(s);
+  }
+  setTimeout(()=> box.innerHTML = "", 4000);
+}
+
+$("#check").addEventListener("click", ()=>{
+  if(state.checked){
+    state = fresh(); render(); window.scrollTo({top:0, behavior:"smooth"}); return;
+  }
+  const left = DATA.items.filter(it => !state.placed[it.id]).length;
+  if(left){ $("#msg").textContent = `Sort all the cards first: ${left} still to go.`; return; }
+  state.checked = true;
+  render();
+  const score = DATA.items.filter(it => state.placed[it.id] === it.answer).length;
+  if(score === DATA.items.length) confetti();
+  $("#panel").scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block:"start"});
+});
+
+function start(saved){
+  if(saved && Array.isArray(saved.order) && saved.order.length === DATA.items.length) state = saved;
+  render();
+}
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+</body>
+</html>

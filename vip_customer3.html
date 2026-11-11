@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who's the VIP Customer?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lexend:wght@400;500;700&family=Noto+Sans+Arabic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Bright loyalty-app world: lilac wall, deep indigo ink, hot pink / electric blue / mint / sunny yellow per customer, coffee-cup stamps as score */
+  --wall:#ece7ff;
+  --paper:#fdfcff;
+  --ink:#1f1840;
+  --pink:#ff4f8b;
+  --blue:#2f6bff;
+  --sun:#ffc93c;
+  --mint:#12a879;
+  --muted:#5b5680;
+  --display:"Bungee","Arial Black",Impact,sans-serif;
+  --body:"Lexend","Segoe UI",system-ui,sans-serif;
+  --arabic:"Noto Sans Arabic","Geeza Pro","Segoe UI",sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--wall);
+  background-image:radial-gradient(circle at 12px 12px, rgba(255,79,139,.14) 3px, transparent 4px),radial-gradient(circle at 36px 36px, rgba(47,107,255,.12) 3px, transparent 4px);
+  background-size:48px 48px;
+  color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.55;
+}
+.wrap{max-width:900px;margin:0 auto;padding:0 18px 60px;display:grid;gap:26px}
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.1;margin:0;text-wrap:balance}
+p{margin:0}
+.ar{font-family:var(--arabic);direction:rtl;unicode-bidi:isolate}
+b.num,.num{font-variant-numeric:tabular-nums}
+
+/* awning */
+.awning{height:34px;background:repeating-linear-gradient(90deg,var(--pink) 0 44px,var(--paper) 44px 88px);border-bottom:4px solid var(--ink);
+  -webkit-mask:radial-gradient(22px 14px at 22px 34px,transparent 98%,#000) -0px 0/44px 100%;mask:radial-gradient(22px 14px at 22px 34px,transparent 98%,#000) 0 0/44px 100%}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1fr 220px;gap:20px;align-items:center;padding-top:22px}
+.eyebrow{font-family:var(--display);font-size:13px;letter-spacing:.06em;color:var(--pink)}
+.hero h1{font-size:clamp(38px,7.5vw,68px);margin:6px 0 10px}
+.hero h1 span{background:var(--sun);padding:0 .12em;display:inline-block;transform:rotate(-2deg)}
+.lede{max-width:56ch}
+.hero svg{width:220px;height:220px}
+
+/* loyalty card */
+.loyal{background:var(--paper);border:3px solid var(--ink);border-radius:14px;box-shadow:6px 6px 0 var(--ink);padding:14px 18px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;position:sticky;top:8px;z-index:4}
+.loyal h2{font-size:16px}
+.loyal .sub{font-size:13px;color:var(--muted)}
+.stamps{display:flex;gap:10px}
+.stamp{width:46px;height:46px;border-radius:50%;border:3px dashed rgba(31,24,64,.35);display:grid;place-items:center;transition:transform .3s}
+.stamp.got{border:3px solid var(--ink);background:var(--sun);animation:stampin .45s cubic-bezier(.2,1.6,.4,1) both}
+.stamp.miss{border:3px solid var(--ink);background:#ffe1ec}
+.stamp svg{width:26px;height:26px}
+@keyframes stampin{from{transform:scale(1.8) rotate(-30deg);opacity:0}to{transform:rotate(-8deg);opacity:1}}
+
+/* rounds */
+.round{background:var(--paper);border:3px solid var(--ink);border-radius:14px;box-shadow:7px 7px 0 var(--ink);padding:22px;display:grid;gap:16px;animation:rise .45s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes rise{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+.rtag{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.rtag .pill{font-family:var(--display);font-size:13px;color:#fff;padding:3px 10px;border-radius:999px;border:2px solid var(--ink)}
+.round h2{font-size:clamp(24px,4vw,32px)}
+.q{font-size:19px;font-weight:500}
+
+/* customers */
+.customers{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.cust{
+  background:#fff;border:3px solid var(--ink);border-radius:14px;padding:0;overflow:hidden;cursor:pointer;
+  display:grid;grid-template-rows:auto 1fr;text-align:left;font:inherit;color:inherit;box-shadow:4px 4px 0 var(--ink);
+  transition:transform .15s, box-shadow .15s;
+}
+.cust:hover{transform:translate(-2px,-3px);box-shadow:6px 7px 0 var(--ink)}
+.cust[aria-pressed="true"]{outline:5px solid var(--sun);outline-offset:3px}
+.cust:disabled{cursor:default}
+.cust .pic{display:grid;place-items:center;padding:10px 0 0;border-bottom:3px solid var(--ink)}
+.cust .pic svg{width:140px;height:120px}
+.cust .info{padding:12px;display:grid;gap:6px;align-content:start}
+.cust h3{font-size:16px}
+.cust .facts{font-size:15px}
+.cust .facts b{font-family:var(--display);font-weight:400}
+.vote-note{font-size:15px;color:var(--muted)}
+
+/* bars */
+.bars{display:grid;gap:12px}
+.bar{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center}
+.bar .lbl{font-weight:700;font-size:15px}
+.track{height:42px;background:rgba(31,24,64,.08);border:3px solid var(--ink);border-radius:10px;overflow:hidden;position:relative}
+.fill{height:100%;width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1);display:flex;align-items:center;justify-content:flex-end;padding-right:10px}
+.fill span{font-family:var(--display);font-size:16px;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.25);white-space:nowrap}
+.track .out{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-family:var(--display);font-size:16px}
+.math{font-size:14px;color:var(--muted);grid-column:2}
+.crown{display:inline-block;animation:bob 1.2s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-4px) rotate(6deg)}}
+
+/* inputs */
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.row input{font-family:var(--display);font-size:26px;width:210px;max-width:100%;padding:8px 12px;border:3px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink)}
+.unit{font-weight:700}
+button.btn{
+  font-family:var(--display);font-size:16px;cursor:pointer;color:#fff;background:var(--pink);
+  border:3px solid var(--ink);border-radius:10px;padding:10px 18px;box-shadow:4px 4px 0 var(--ink);transition:transform .1s, box-shadow .1s;
+}
+button.btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--ink)}
+button.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+button.btn.ghost{background:#fff;color:var(--ink)}
+button.btn.blue{background:var(--blue)}
+button.btn:disabled{opacity:.5;cursor:default;transform:none;box-shadow:4px 4px 0 var(--ink)}
+:focus-visible{outline:4px solid var(--mint);outline-offset:3px}
+.fb{border-radius:10px;padding:12px 14px;border:3px solid var(--ink);font-weight:500}
+.fb.ok{background:#dff5ec}
+.fb.no{background:#ffe1ec}
+.fb b{font-family:var(--display);font-weight:400}
+.steps{background:#fff6d6;border:2px dashed var(--ink);border-radius:10px;padding:12px 14px;font-size:16px}
+.steps ol{margin:6px 0 0;padding-left:1.3em}
+.formula{font-family:var(--display);font-size:clamp(15px,2.6vw,19px);background:var(--ink);color:var(--paper);padding:10px 14px;border-radius:10px;line-height:1.5}
+
+/* choices */
+.choices{display:grid;gap:10px}
+.choice{font:inherit;text-align:left;cursor:pointer;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:10px;padding:12px 14px;box-shadow:3px 3px 0 var(--ink);display:flex;gap:12px;align-items:center}
+.choice .k{font-family:var(--display);width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--sun);border:2px solid var(--ink);flex:none}
+.choice.right{background:#dff5ec;border-color:var(--blue)}
+.choice.wrong{background:#ffe1ec;border-color:var(--pink)}
+.choice:disabled{cursor:default}
+
+/* final */
+.final{background:var(--ink);color:var(--paper)}
+.final .fb{color:var(--ink)}
+.terms{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.term{background:var(--paper);color:var(--ink);border:3px solid var(--sun);border-radius:12px;padding:12px;display:grid;gap:4px}
+.term h3{font-size:16px}
+.term .ar{font-size:17px;font-weight:700;color:var(--blue)}
+.term p{font-size:15px}
+.big{font-family:var(--display);font-size:44px;color:var(--sun)}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:20}
+.confetti i{position:absolute;top:-30px;width:14px;height:20px;border-radius:3px;border:2px solid var(--ink);animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(600deg)}}
+footer{font-size:13px;color:var(--muted);text-align:center}
+
+@media (max-width:700px){
+  .hero{grid-template-columns:1fr}
+  .hero svg{width:160px;height:160px;justify-self:center}
+  .customers{grid-template-columns:1fr}
+  .cust{grid-template-columns:130px 1fr;grid-template-rows:auto}
+  .cust .pic{border-bottom:0;border-right:3px solid var(--ink);padding:6px}
+  .cust .pic svg{width:110px;height:100px}
+  .bar{grid-template-columns:1fr}
+  .math{grid-column:1}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}.confetti{display:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="cup" viewBox="0 0 32 32"><path d="M6 10h16l-2 16H8z" fill="#fdfcff" stroke="#1f1840" stroke-width="2.4" stroke-linejoin="round"/><path d="M22 13h3a4 4 0 0 1 0 8h-4" fill="none" stroke="#1f1840" stroke-width="2.4"/><path d="M11 7c-1-2 1-3 0-5M16 7c-1-2 1-3 0-5" stroke="#1f1840" stroke-width="2" stroke-linecap="round" fill="none"/></symbol>
+</defs></svg>
+
+<div class="awning" aria-hidden="true"></div>
+<main class="wrap">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">INS260 · Chapter 9 · Customer relationship management</p>
+      <h1>Who's the <span>VIP</span> customer?</h1>
+      <p class="lede">Qahwa Corner, a small café, wants to treat its most valuable customer like a VIP. But which customer is worth the most? Play 4 rounds and fill your loyalty card with coffee stamps.</p>
+    </div>
+    <svg viewBox="0 0 220 220" role="img" aria-label="A small café with a striped awning and a coffee cup sign">
+      <rect x="20" y="70" width="180" height="130" fill="#fdfcff" stroke="#1f1840" stroke-width="4"/>
+      <path d="M12 70h196l-12 26H24z" fill="#ff4f8b" stroke="#1f1840" stroke-width="4"/>
+      <path d="M50 70l-6 26M88 70l-3 26M132 70l3 26M170 70l6 26" stroke="#fdfcff" stroke-width="12"/>
+      <rect x="40" y="26" width="140" height="36" rx="8" fill="#2f6bff" stroke="#1f1840" stroke-width="4"/>
+      <text x="110" y="50" text-anchor="middle" font-family="Bungee, Arial Black, sans-serif" font-size="15" textLength="122" lengthAdjust="spacingAndGlyphs" fill="#fdfcff">QAHWA CORNER</text>
+      <rect x="90" y="130" width="40" height="70" fill="#1f1840"/>
+      <circle cx="122" cy="166" r="3" fill="#ffc93c"/>
+      <rect x="34" y="114" width="44" height="40" fill="#d8e4ff" stroke="#1f1840" stroke-width="4"/>
+      <rect x="142" y="114" width="44" height="40" fill="#d8e4ff" stroke="#1f1840" stroke-width="4"/>
+      <g transform="translate(146,120) scale(1.1)"><use href="#cup" width="32" height="32"/></g>
+      <g transform="translate(38,120) scale(1.1)"><use href="#cup" width="32" height="32"/></g>
+    </svg>
+  </header>
+
+  <section class="loyal" aria-label="Your loyalty card">
+    <div><h2>Your loyalty card</h2><p class="sub">One stamp for each right answer</p></div>
+    <div class="stamps" id="stamps"></div>
+    <p class="num" id="scoreTxt" style="font-family:var(--display)"></p>
+  </section>
+
+  <div id="rounds" style="display:grid;gap:26px" aria-live="polite"></div>
+
+  <footer>Created by Reem Salem (using Claude.ai) for INS260 at Zayed University.</footer>
+</main>
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+
+<script>
+(function(){
+const fmt = n => Number(n).toLocaleString("en-US");
+
+/* ---------- customer portraits ---------- */
+const PEOPLE = {
+wedding:`<svg viewBox="0 0 140 120" role="img" aria-label="A wedding planner holding a giant receipt">
+  <circle cx="56" cy="34" r="16" fill="#e9b98f" stroke="#1f1840" stroke-width="3"/>
+  <path d="M40 32c0-14 32-14 32 0-8-6-24-6-32 0z" fill="#1f1840"/>
+  <path d="M30 118V74c0-12 12-20 26-20s26 8 26 20v44z" fill="#ff4f8b" stroke="#1f1840" stroke-width="3"/>
+  <path d="M48 56l8 10 8-10" fill="#fdfcff" stroke="#1f1840" stroke-width="2.5"/>
+  <rect x="84" y="20" width="44" height="90" rx="3" fill="#fdfcff" stroke="#1f1840" stroke-width="3" transform="rotate(8 106 65)"/>
+  <g transform="rotate(8 106 65)" font-family="Bungee, Arial Black, sans-serif" fill="#1f1840">
+    <text x="106" y="38" text-anchor="middle" font-size="8">RECEIPT</text>
+    <path d="M90 46h32M90 54h26M90 62h30" stroke="#1f1840" stroke-width="2"/>
+    <text x="106" y="86" text-anchor="middle" font-size="9" fill="#ff4f8b">5,000</text>
+    <text x="106" y="98" text-anchor="middle" font-size="7">AED</text>
+  </g>
+  <path d="M8 22l6 4 2-7 4 7 6-3" fill="none" stroke="#ffc93c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`,
+daily:`<svg viewBox="0 0 140 120" role="img" aria-label="A smiling regular customer holding a coffee cup">
+  <circle cx="62" cy="34" r="16" fill="#c98c62" stroke="#1f1840" stroke-width="3"/>
+  <path d="M46 30c2-14 30-14 32 0-6-4-26-4-32 0z" fill="#1f1840"/>
+  <path d="M55 38c4 4 10 4 14 0" fill="none" stroke="#1f1840" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M36 118V74c0-12 12-20 26-20s26 8 26 20v44z" fill="#2f6bff" stroke="#1f1840" stroke-width="3"/>
+  <path d="M62 56v24" stroke="#ffc93c" stroke-width="3"/><rect x="56" y="78" width="12" height="9" rx="2" fill="#fdfcff" stroke="#1f1840" stroke-width="2"/>
+  <g transform="translate(86,58) scale(1.4)"><use href="#cup" width="32" height="32"/></g>
+  <text x="112" y="24" font-family="Bungee, Arial Black, sans-serif" font-size="11" fill="#2f6bff">7AM</text>
+</svg>`,
+family:`<svg viewBox="0 0 140 120" role="img" aria-label="A family of three with a shopping bag">
+  <circle cx="38" cy="36" r="14" fill="#e3a77a" stroke="#1f1840" stroke-width="3"/>
+  <path d="M24 34c0-13 28-13 28 0-6-5-22-5-28 0z" fill="#1f1840"/>
+  <path d="M16 118V76c0-10 10-18 22-18s22 8 22 18v42z" fill="#12a879" stroke="#1f1840" stroke-width="3"/>
+  <circle cx="100" cy="36" r="14" fill="#c98c62" stroke="#1f1840" stroke-width="3"/>
+  <path d="M86 30c4-10 24-10 28 0" fill="#fdfcff" stroke="#1f1840" stroke-width="3"/>
+  <path d="M78 118V76c0-10 10-18 22-18s22 8 22 18v42z" fill="#ffc93c" stroke="#1f1840" stroke-width="3"/>
+  <circle cx="69" cy="72" r="10" fill="#e9b98f" stroke="#1f1840" stroke-width="3"/>
+  <path d="M56 118V96c0-8 6-12 13-12s13 4 13 12v22z" fill="#ff4f8b" stroke="#1f1840" stroke-width="3"/>
+  <text x="70" y="22" text-anchor="middle" font-family="Bungee, Arial Black, sans-serif" font-size="10" fill="#12a879">FRI</text>
+</svg>`,
+student:`<svg viewBox="0 0 140 120" role="img" aria-label="A student with a backpack and a coffee">
+  <circle cx="64" cy="36" r="16" fill="#e3a77a" stroke="#1f1840" stroke-width="3"/>
+  <path d="M48 34c0-14 32-14 32 0-8-6-24-6-32 0z" fill="#1f1840"/>
+  <rect x="80" y="62" width="30" height="40" rx="8" fill="#ff4f8b" stroke="#1f1840" stroke-width="3"/>
+  <path d="M38 118V76c0-12 12-20 26-20s26 8 26 20v42z" fill="#ffc93c" stroke="#1f1840" stroke-width="3"/>
+  <g transform="translate(16,64) scale(1.2)"><use href="#cup" width="32" height="32"/></g>
+  <path d="M100 18l14 6-14 6-14-6z" fill="#1f1840"/><path d="M92 27v6c4 3 12 3 16 0v-6" fill="#1f1840"/>
+</svg>`
+};
+
+const CUSTOMERS = [
+  {id:"wedding", name:"The Wedding Planner", color:"var(--pink)", facts:"Spent <b>5,000 AED</b> in one day on coffee for a big wedding. Never came back.",
+   value:5000, math:"5,000 AED × 1 visit = 5,000 AED"},
+  {id:"daily", name:"The Daily Regular", color:"var(--blue)", facts:"Buys a <b>15 AED</b> coffee <b>every day</b>, and has done for <b>4 years</b>.",
+   value:15*365*4, math:"15 AED × 365 days × 4 years = 21,900 AED"},
+  {id:"family", name:"The Weekend Family", color:"var(--mint)", facts:"Spends <b>60 AED</b> every <b>Friday</b>, for <b>2 years</b> so far.",
+   value:60*52*2, math:"60 AED × 52 weeks × 2 years = 6,240 AED"}
+];
+
+/* ---------- state ---------- */
+const fresh = () => ({round:1, vote:null, revealed:false, r2:null, r2tries:0, r2done:false, r3:null, r3tries:0, r3done:false, r4:null, stamps:[null,null,null,null]});
+let state = fresh();
+window.claude?.hot?.snapshot?.(() => state);
+const $ = s => document.querySelector(s);
+
+function renderCard(){
+  $("#stamps").innerHTML = state.stamps.map((s,i)=>
+    `<span class="stamp ${s===true?"got":s===false?"miss":""}" aria-label="Round ${i+1}: ${s===true?"stamped":s===false?"missed":"not played yet"}">${s===true?`<svg><use href="#cup"/></svg>`:s===false?"✗":""}</span>`).join("");
+  const got = state.stamps.filter(s=>s===true).length;
+  $("#scoreTxt").textContent = `${got} / 4 stamps`;
+}
+
+/* ---------- round 1 ---------- */
+function round1(){
+  const max = Math.max(...CUSTOMERS.map(c=>c.value));
+  const winner = CUSTOMERS.reduce((a,b)=>a.value>b.value?a:b);
+  return `<section class="round" aria-labelledby="r1h">
+    <div class="rtag"><span class="pill" style="background:var(--pink)">Round 1</span><span class="pill" style="background:var(--ink)">Vote</span></div>
+    <h2 id="r1h">Which customer is worth the most to the café?</h2>
+    <p class="q">Look at each customer. Then tap the one you think brings the café the most money over time.</p>
+    <div class="customers">
+      ${CUSTOMERS.map(c=>`<button type="button" class="cust" data-vote="${c.id}" aria-pressed="${state.vote===c.id}" ${state.revealed?"disabled":""}>
+        <div class="pic" style="background:${c.color}22">${PEOPLE[c.id]}</div>
+        <div class="info"><h3 style="color:${c.color}">${c.name}</h3><p class="facts">${c.facts}</p></div>
+      </button>`).join("")}
+    </div>
+    ${!state.revealed ? `<div class="row"><button type="button" class="btn" id="reveal" ${state.vote?"":"disabled"}>Reveal the answer</button><span class="vote-note">${state.vote?"Good choice? Let's see!":"Tap a customer to vote."}</span></div>` : `
+      <h3 style="font-size:20px">Total money each customer brings</h3>
+      <div class="bars">
+        ${CUSTOMERS.map(c=>{
+          const pct = Math.max(6, Math.round(c.value/max*100));
+          return `<div class="bar"><span class="lbl">${c.id===winner.id?'<span class="crown" aria-hidden="true">👑</span> ':''}${c.name}</span>
+            <div class="track" role="img" aria-label="${c.name}: ${fmt(c.value)} AED"><div class="fill" data-w="${pct}" style="background:${c.color}"><span>${fmt(c.value)} AED</span></div></div>
+            <span class="math">${c.math}</span></div>`;
+        }).join("")}
+      </div>
+      <div class="fb ${state.vote===winner.id?"ok":"no"}">${state.vote===winner.id
+        ? `<b>Stamp!</b> You picked the Daily Regular. A small 15 AED coffee every day adds up to <b>21,900 AED</b>, more than four times the wedding order.`
+        : `<b>Not quite.</b> The big 5,000 AED order looks impressive, but the <b>Daily Regular</b> is worth the most: 15 AED every day adds up to <b>21,900 AED</b>.`}
+      </div>
+      <div class="steps"><b>This is customer lifetime value (CLTV)</b>: how much a customer is worth to a company over the whole relationship, not just one visit. In real companies, CLTV also subtracts the cost of winning and serving the customer. Here we keep it simple and only add up what they spend.</div>
+      <div class="row"><button type="button" class="btn blue" data-next="2">Next round →</button></div>`}
+  </section>`;
+}
+
+/* ---------- round 2 ---------- */
+const R2_ANSWER = 10*3*52*3; // 4,680
+function round2(){
+  return `<section class="round" aria-labelledby="r2h">
+    <div class="rtag"><span class="pill" style="background:var(--blue)">Round 2</span><span class="pill" style="background:var(--ink)">Calculate</span></div>
+    <div class="customers" style="grid-template-columns:1fr">
+      <div class="cust" style="cursor:default;grid-template-columns:150px 1fr;grid-template-rows:auto">
+        <div class="pic" style="background:#ffc93c33;border-bottom:0;border-right:3px solid var(--ink)">${PEOPLE.student}</div>
+        <div class="info"><h3 style="color:#b07d00">The Student</h3><p class="facts">Buys a <b>10 AED</b> coffee <b>3 times a week</b>, for <b>3 years</b> of university.</p></div>
+      </div>
+    </div>
+    <h2 id="r2h">What is the Student's customer lifetime value?</h2>
+    <div class="formula">CLTV = AED per visit × visits per week × 52 weeks × years</div>
+    ${state.r2done ? "" : `
+    <div class="steps"><b>Work it out in 3 steps:</b><ol>
+      <li><b>One week:</b> 10 AED × 3 visits = ___ AED a week</li>
+      <li><b>One year:</b> your weekly amount × 52 weeks = ___ AED a year</li>
+      <li><b>All 3 years:</b> your yearly amount × 3 years = ___ AED. This is the CLTV.</li>
+    </ol></div>
+    <div class="row">
+      <label for="r2in" class="unit">My answer:</label>
+      <input id="r2in" type="text" inputmode="numeric" placeholder="e.g. 3000" autocomplete="off">
+      <span class="unit">AED</span>
+      <button type="button" class="btn" id="r2go">Check</button>
+    </div>`}
+    ${state.r2 !== null ? feedback2() : ""}
+    ${state.r2done ? `<div class="row"><button type="button" class="btn blue" data-next="3">Next round →</button></div>` : ""}
+  </section>`;
+}
+function feedback2(){
+  if(state.r2 === R2_ANSWER) return `<div class="fb ok"><b>Stamp!</b> 10 × 3 × 52 × 3 = <b>4,680 AED</b>. Small coffees, but a lot of value over 3 years.</div>`;
+  if(state.r2done) return `<div class="fb no"><b>The answer is 4,680 AED.</b> 10 AED × 3 visits = 30 AED a week. 30 × 52 = 1,560 AED a year. 1,560 × 3 years = 4,680 AED.</div>`;
+  return `<div class="fb no"><b>Not yet.</b> You wrote ${fmt(state.r2)} AED. Check your steps: one week is 10 × 3 = <b>30 AED</b>, and one year is 30 × 52 = <b>1,560 AED</b>. Now multiply by 3 years and try once more.</div>`;
+}
+
+/* ---------- round 3 ---------- */
+function round3(){
+  return `<section class="round" aria-labelledby="r3h">
+    <div class="rtag"><span class="pill" style="background:var(--mint)">Round 3</span><span class="pill" style="background:var(--ink)">Churn</span></div>
+    <h2 id="r3h">Uh oh. Customers are leaving!</h2>
+    <p class="q">Last year Qahwa Corner had <b class="num">200</b> regular customers. This year, <b class="num">30</b> of them stopped coming.</p>
+    <p>The <b>churn rate</b> is the percentage of customers who stop buying from a company.</p>
+    <div class="formula">churn rate = customers who left ÷ all customers × 100</div>
+    <div class="steps"><b>Work it out in 2 steps:</b><ol>
+      <li>30 ÷ 200 = ___</li>
+      <li>Your answer × 100 = ___ %. This is the churn rate.</li>
+    </ol></div>
+    <p class="q">What is the café's churn rate?</p>
+    ${state.r3done ? "" : `
+    <div class="row">
+      <label for="r3in" class="unit">My answer:</label>
+      <input id="r3in" type="text" inputmode="decimal" placeholder="e.g. 10" autocomplete="off">
+      <span class="unit">%</span>
+      <button type="button" class="btn" id="r3go">Check</button>
+    </div>`}
+    ${state.r3 !== null ? feedback3() : ""}
+    ${state.r3done ? `<div class="steps">A rising churn rate is a warning sign: the café's customer base is shrinking. CRM systems help companies <b>spot customers who are about to leave</b>, so they can do something about it.</div>
+      <div class="row"><button type="button" class="btn blue" data-next="4">Next round →</button></div>` : ""}
+  </section>`;
+}
+function feedback3(){
+  if(Math.abs(state.r3 - 15) < 0.01) return `<div class="fb ok"><b>Stamp!</b> 30 ÷ 200 = 0.15, and 0.15 × 100 = <b>15%</b>.</div>`;
+  if(state.r3done) return `<div class="fb no"><b>The answer is 15%.</b> 30 ÷ 200 = 0.15. Then 0.15 × 100 = 15%.</div>`;
+  return `<div class="fb no"><b>Not yet.</b> You wrote ${state.r3}%. Check your steps: 30 ÷ 200 = <b>0.15</b>. Now multiply by 100 and try once more.</div>`;
+}
+
+/* ---------- round 4 ---------- */
+const R4 = [
+  ["a","Do nothing. She'll come back if she wants to."],
+  ["b","Send her a \"We miss you!\" message with a free upgrade on her usual coffee."],
+  ["c","Raise prices to make up for the lost sales."],
+  ["d","Delete her from the customer list."]
+];
+function round4(){
+  return `<section class="round" aria-labelledby="r4h">
+    <div class="rtag"><span class="pill" style="background:var(--sun);color:var(--ink)">Round 4</span><span class="pill" style="background:var(--ink)">CRM in action</span></div>
+    <h2 id="r4h">The Daily Regular has not come in for 2 weeks</h2>
+    <p class="q">The café's CRM system noticed the Daily Regular stopped coming. She is worth 21,900 AED. What should a café using CRM do?</p>
+    <div class="choices">
+      ${R4.map(([k,t])=>{
+        let cls="";
+        if(state.r4){ if(k==="b") cls="right"; else if(k===state.r4) cls="wrong"; }
+        return `<button type="button" class="choice ${cls}" data-r4="${k}" ${state.r4?"disabled":""}><span class="k">${k.toUpperCase()}</span><span>${t}</span></button>`;
+      }).join("")}
+    </div>
+    ${state.r4 ? `<div class="fb ${state.r4==="b"?"ok":"no"}">${state.r4==="b"
+      ? `<b>Stamp!</b> That's CRM at work. <b>Analytical CRM</b> spotted the problem in the data, and <b>operational CRM</b> acted on it with a personal offer.`
+      : `<b>Not the best choice.</b> The best answer is <b>B</b>. Keeping a loyal customer is cheaper than finding a new one. CRM spotted the problem, then the café acted with a personal offer.`}</div>
+      <div class="row"><button type="button" class="btn blue" data-next="5">See my loyalty card →</button></div>` : ""}
+  </section>`;
+}
+
+/* ---------- final ---------- */
+function finalCard(){
+  const got = state.stamps.filter(s=>s===true).length;
+  const msg = got===4 ? "Full card! You're a CRM VIP." : got>=2 ? "Nice work! Almost a full card." : "Good try! Play again to fill your card.";
+  return `<section class="round final" aria-labelledby="fh">
+    <div class="rtag"><span class="pill" style="background:var(--pink)">Finished</span></div>
+    <h2 id="fh" style="color:var(--paper)">${msg}</h2>
+    <p><span class="big">${got}/4</span> stamps</p>
+    <div class="terms">
+      <div class="term"><h3>CRM</h3><p class="ar" lang="ar">إدارة علاقات العملاء</p><p>Software that keeps everything a company knows about its customers in one place, to serve them better and keep them coming back.</p></div>
+      <div class="term"><h3>Customer lifetime value (CLTV)</h3><p class="ar" lang="ar">القيمة الدائمة للعميل</p><p>How much a customer is worth over the whole relationship, minus the cost of winning and serving them.</p></div>
+      <div class="term"><h3>Churn rate</h3><p class="ar" lang="ar">معدل فقدان العملاء</p><p>The percentage of customers who stop buying from a company. A sign of whether the customer base is growing or shrinking.</p></div>
+    </div>
+    <p style="font-size:20px"><b>Big idea:</b> one big sale is nice, but <b>loyal customers are worth much more</b>. That's why companies use CRM.</p>
+    <div class="row"><button type="button" class="btn" id="again">Play again</button></div>
+  </section>`;
+}
+
+/* ---------- render ---------- */
+function render(focusSel){
+  renderCard();
+  let h = round1();
+  if(state.round>=2) h += round2();
+  if(state.round>=3) h += round3();
+  if(state.round>=4) h += round4();
+  if(state.round>=5) h += finalCard();
+  $("#rounds").innerHTML = h;
+  // animate bars
+  requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll(".fill").forEach(f=>f.style.width=f.dataset.w+"%")));
+  if(focusSel){
+    const el = document.querySelector(focusSel);
+    if(el){
+      const sec = el.closest("section") || el;
+      sec.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth", block:"start"});
+      if(el.tagName==="INPUT") setTimeout(()=>el.focus({preventScroll:true}),400);
+    }
+  }
+}
+
+function confetti(){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const box = $("#confetti"); box.innerHTML="";
+  const colors=["#ff4f8b","#2f6bff","#ffc93c","#12a879","#fdfcff"];
+  for(let i=0;i<46;i++){const s=document.createElement("i");s.style.left=Math.random()*100+"vw";s.style.background=colors[i%colors.length];s.style.animationDuration=(1.6+Math.random()*1.8)+"s";s.style.animationDelay=(Math.random()*.5)+"s";box.appendChild(s);}
+  setTimeout(()=>box.innerHTML="",4200);
+}
+
+const parseNum = v => Number(String(v).replace(/[,\s%AEDaed]/g,""));
+const keepY = fn => { const y = window.scrollY; fn(); window.scrollTo(0,y); };
+
+function checkR2(){
+  const raw = $("#r2in").value; const n = parseNum(raw);
+  if(raw.trim()==="" || !Number.isFinite(n)){ $("#r2in").focus(); return; }
+  state.r2 = n; state.r2tries++;
+  if(n === R2_ANSWER){ state.r2done = true; state.stamps[1] = true; }
+  else if(state.r2tries >= 2){ state.r2done = true; state.stamps[1] = false; }
+  keepY(()=>render()); if(!state.r2done) $("#r2in") && $("#r2in").focus();
+}
+function checkR3(){
+  const raw = $("#r3in").value; let n = parseNum(raw);
+  if(raw.trim()==="" || !Number.isFinite(n)){ $("#r3in").focus(); return; }
+  if(n>0 && n<1) n = n*100; // accept 0.15
+  state.r3 = n; state.r3tries++;
+  if(Math.abs(n-15)<0.01){ state.r3done = true; state.stamps[2] = true; }
+  else if(state.r3tries >= 2){ state.r3done = true; state.stamps[2] = false; }
+  keepY(()=>render()); if(!state.r3done) $("#r3in") && $("#r3in").focus();
+}
+
+document.addEventListener("click", e=>{
+  const v = e.target.closest("[data-vote]");
+  if(v && !state.revealed){ state.vote = v.dataset.vote; keepY(()=>render()); return; }
+  if(e.target.closest("#reveal")){ state.revealed = true; state.stamps[0] = state.vote==="daily"; keepY(()=>render()); return; }
+  const nx = e.target.closest("[data-next]");
+  if(nx){ state.round = Number(nx.dataset.next); render(state.round===2?"#r2in":state.round===3?"#r3in":state.round===4?"#r4h":"#fh"); if(state.round===5 && state.stamps.every(s=>s===true)) confetti(); return; }
+  if(e.target.closest("#r2go")){ checkR2(); return; }
+  if(e.target.closest("#r3go")){ checkR3(); return; }
+  const r4 = e.target.closest("[data-r4]");
+  if(r4 && !state.r4){ state.r4 = r4.dataset.r4; state.stamps[3] = state.r4==="b"; keepY(()=>render()); return; }
+  if(e.target.closest("#again")){ state = fresh(); render(); window.scrollTo({top:0,behavior:"smooth"}); }
+});
+document.addEventListener("keydown", e=>{
+  if(e.key!=="Enter") return;
+  if(e.target.id==="r2in"){ e.preventDefault(); checkR2(); }
+  if(e.target.id==="r3in"){ e.preventDefault(); checkR3(); }
+});
+
+function start(saved){ if(saved && typeof saved.round==="number") state = Object.assign(fresh(), saved); render(); }
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+</body>
+</html>
